@@ -1,3 +1,6 @@
+#!/usr/bin/python
+
+import sys
 import os
 import requests
 from urllib.parse import urlparse
@@ -15,12 +18,19 @@ def download_file(url, root_dir, html_file_path):
     # Create a path based on the URL structure
     file_path = os.path.join(root_dir, parsed_url.netloc, parsed_url.path.strip("/"))
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # Creat the relative path to the html file
+    file_path_relative = os.path.relpath(file_path, os.path.dirname(html_file_path))
+
+    # Skip downloading if the file already exists
+    if os.path.exists(file_path):
+        return file_path_relative
+
     # Download and save the file
     response = requests.get(url)
     with open(file_path, 'wb') as file:
         file.write(response.content)
-    # Return the relative path to the html file
-    file_path_relative = os.path.relpath(file_path, os.path.dirname(html_file_path))
+    
     return file_path_relative
 
 def update_html_file(html_file_path, root_dir):
@@ -49,12 +59,20 @@ def update_html_file(html_file_path, root_dir):
 def scan_and_update_html_files(channel_dir, root_dir):
     """Scan each folder in the channel directory and update the index.html file found within."""
     for subdir, dirs, files in os.walk(channel_dir):
+        # Print message to indicate the current directory being processed
+        print(f"Processing directory: {subdir}")
         for file in files:
             if file == 'index.html':
                 html_file_path = os.path.join(subdir, file)
                 update_html_file(html_file_path, root_dir)
-        
-# Example usage
-channel_dir = '/path/to/html_output/channel'
-root_dir = '/path/to/html_output/attachments'
-scan_and_update_html_files(channel_dir, root_dir)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python slack-export-local.py <root_directory_path>")
+        sys.exit(1)
+
+    root_directory_path = sys.argv[1]
+    channel_dir = os.path.join(root_directory_path, "channel")
+    root_dir = os.path.join(root_directory_path, "attachments")
+
+    scan_and_update_html_files(channel_dir, root_dir)
