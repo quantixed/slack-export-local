@@ -45,8 +45,16 @@ def update_html_file(html_file_path, root_dir):
     # Write the updated HTML back to a file
     with open(html_file_path, 'w', encoding='utf-8') as file:
         file.write(str(soup))
+
+def scan_and_update_html_files(channel_dir, root_dir):
+    """Scan each folder in the channel directory and update the index.html file found within."""
+    for subdir, dirs, files in os.walk(channel_dir):
+        for file in files:
+            if file == 'index.html':
+                html_file_path = os.path.join(subdir, file)
+                update_html_file(html_file_path, root_dir)
         
 # Example usage
-html_file_path = '/path/to/html_output/channel/announcements/index.html'
+channel_dir = '/path/to/html_output/channel'
 root_dir = '/path/to/html_output/attachments'
-update_html_file(html_file_path, root_dir)
+scan_and_update_html_files(channel_dir, root_dir)
